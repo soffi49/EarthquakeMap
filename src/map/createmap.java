@@ -1,5 +1,6 @@
 package map;
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.data.Feature;
 import de.fhpotsdam.unfolding.data.GeoJSONReader;
@@ -11,15 +12,14 @@ import de.fhpotsdam.unfolding.marker.MultiMarker;
 import de.fhpotsdam.unfolding.providers.AbstractMapProvider;
 import de.fhpotsdam.unfolding.providers.Microsoft;
 import de.fhpotsdam.unfolding.utils.MapUtils;
+import jdk.internal.dynalink.linker.ConversionComparator;
 import markers.*;
 import parser.dataParser;
 import processing.core.PApplet;
 import processing.core.PFont;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class createmap extends PApplet {
 
@@ -30,7 +30,7 @@ public class createmap extends PApplet {
     private static final String data="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.atom";
     private static final String cityFile = "city-data.json";
     private static final String countryFile = "countries.geo.json";
-    private List<Marker> cityMarkers;
+    private static List<Marker> cityMarkers;
     private List<Marker> countryMarkers;
     private List<Marker> earthquakeMarkers;
 
@@ -68,6 +68,7 @@ public class createmap extends PApplet {
             }
         }
         printQuakes();
+        sortAndPrint(5);
         map.addMarkers(earthquakeMarkers);
         map.addMarkers(cityMarkers);
     }
@@ -76,6 +77,17 @@ public class createmap extends PApplet {
         background(232, 227, 227);
         map.draw();
         addKey();
+    }
+
+    private void sortAndPrint(int numToPrint){
+        List<EarthquakeMarker> temp = new ArrayList<>();
+        earthquakeMarkers.forEach(marker -> temp.add((EarthquakeMarker) marker));
+        Collections.sort(temp);
+
+        for(int i=0;i<numToPrint;i++){
+            System.out.println("M "+temp.get(i).getMagnitude()+" "+temp.get(i).getTitle());
+        }
+
     }
 
     public void mouseMoved()
@@ -134,8 +146,8 @@ public class createmap extends PApplet {
         if (lastClicked instanceof CityMarker) {
 
             for (Marker marker : earthquakeMarkers) {
-                if (marker.getDistanceTo(lastClicked.getLocation()) > ((EarthquakeMarker) marker).threatCircle()) {
-                    marker.setHidden(true);
+                if (!((EarthquakeMarker)marker).isThreatCircle(lastClicked)){
+                        marker.setHidden(true);
                 }
             }
             for (Marker marker : cityMarkers) {
@@ -145,8 +157,8 @@ public class createmap extends PApplet {
         else if (lastClicked instanceof EarthquakeMarker){
 
             for (Marker marker : cityMarkers) {
-                if (lastClicked.getDistanceTo(marker.getLocation()) > ((EarthquakeMarker) lastClicked).threatCircle()) {
-                    marker.setHidden(true);
+                if (!((EarthquakeMarker)lastClicked).isThreatCircle(marker)){
+                        marker.setHidden(true);
                 }
             }
             for (Marker marker : earthquakeMarkers) {
@@ -275,6 +287,10 @@ public class createmap extends PApplet {
         }
         System.out.println("Number of earthquakes in the Ocean: "+quakesOcean);
 
+    }
+
+    public static List<Marker> getCityMarkers(){
+        return cityMarkers;
     }
 
 }

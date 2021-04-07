@@ -1,29 +1,25 @@
 package markers;
 
 import de.fhpotsdam.unfolding.data.PointFeature;
+import de.fhpotsdam.unfolding.marker.Marker;
 import processing.core.PGraphics;
 
 import java.awt.*;
 import java.util.HashMap;
 
-public abstract class EarthquakeMarker extends CommonMarker{
+public abstract class EarthquakeMarker extends CommonMarker implements Comparable<EarthquakeMarker>{
 
 
     protected boolean isOnLand;
     protected float radius;
     protected static final float kmPerMile = 1.6f;
 
-    /** Greater than or equal to this threshold is a moderate earthquake */
     public static final float THRESHOLD_MODERATE = 5;
-    /** Greater than or equal to this threshold is a light earthquake */
     public static final float THRESHOLD_LIGHT = 4;
 
-    /** Greater than or equal to this threshold is an intermediate depth */
     public static final float THRESHOLD_INTERMEDIATE = 70;
-    /** Greater than or equal to this threshold is a deep depth */
     public static final float THRESHOLD_DEEP = 300;
 
-    // ADD constants for colors
     private static final Color high=new Color(128, 0, 0,200);
     private static final Color medium=new Color(255, 111, 0,200);
     private static final Color low=new Color(255, 187, 0,200);
@@ -88,6 +84,12 @@ public abstract class EarthquakeMarker extends CommonMarker{
         }
     }
 
+    public int compareTo(EarthquakeMarker marker){
+        if(getMagnitude()>marker.getMagnitude()) return -1;
+        if (getMagnitude()<marker.getMagnitude()) return 1;
+        return 0;
+    }
+
     public float getMagnitude() {
         return Float.parseFloat(getProperty("magnitude").toString());
     }
@@ -104,6 +106,10 @@ public abstract class EarthquakeMarker extends CommonMarker{
     public boolean isOnLand()
     {
         return isOnLand;
+    }
+    public boolean isThreatCircle(Marker m){
+        if(m.getDistanceTo(this.getLocation())>threatCircle()) return false;
+        return true;
     }
 
 }
