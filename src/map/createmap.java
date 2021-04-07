@@ -8,14 +8,10 @@ import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.marker.AbstractShapeMarker;
 import de.fhpotsdam.unfolding.marker.Marker;
 import de.fhpotsdam.unfolding.marker.MultiMarker;
-import de.fhpotsdam.unfolding.marker.SimplePointMarker;
 import de.fhpotsdam.unfolding.providers.AbstractMapProvider;
 import de.fhpotsdam.unfolding.providers.Microsoft;
 import de.fhpotsdam.unfolding.utils.MapUtils;
-import markers.CityMarker;
-import markers.EarthquakeMarker;
-import markers.LandQuakeMarker;
-import markers.OceanQuakeMarker;
+import markers.*;
 import parser.dataParser;
 import processing.core.PApplet;
 import processing.core.PFont;
@@ -29,14 +25,17 @@ public class createmap extends PApplet {
 
     private static final long serialVersionUID = 1L;
     private UnfoldingMap map;
-    private AbstractMapProvider provider=new Microsoft.HybridProvider();
+    private final AbstractMapProvider provider=new Microsoft.HybridProvider();
 
-    private String data="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.atom";
-    private String cityFile = "city-data.json";
-    private String countryFile = "countries.geo.json";
+    private static final String data="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.atom";
+    private static final String cityFile = "city-data.json";
+    private static final String countryFile = "countries.geo.json";
     private List<Marker> cityMarkers;
     private List<Marker> countryMarkers;
     private List<Marker> earthquakeMarkers;
+
+    private CommonMarker lastSelected;
+    private CommonMarker lastClicked;
 
 
     public void setup(){
@@ -73,9 +72,97 @@ public class createmap extends PApplet {
         map.addMarkers(cityMarkers);
     }
     public void draw(){
+        noStroke();
         background(232, 227, 227);
         map.draw();
         addKey();
+    }
+
+    public void mouseMoved()
+    {
+        if (lastSelected != null) {
+            lastSelected.setSelected(false);
+            lastSelected = null;
+
+        }
+        selectMarkerIfHover(earthquakeMarkers);
+        selectMarkerIfHover(cityMarkers);
+    }
+
+    private void selectMarkerIfHover(List<Marker> markers)
+    {
+        if(lastSelected!=null) return;
+
+        for(Marker marker : markers){
+            if(marker.isInside(map,mouseX,mouseY)){
+                marker.setSelected(true);
+                lastSelected=(CommonMarker)marker;
+                return;
+            }
+        }
+    }
+    private void selectMarkerIfClicked(List<Marker> markers)
+    {
+        if(lastClicked!=null) return;
+
+        for(Marker marker : markers){
+            if(marker.isInside(map,mouseX,mouseY) && !marker.isHidden()){
+                lastClicked=(CommonMarker)marker;
+                return;
+            }
+        }
+    }
+
+    public void mouseClicked()
+    {
+        if(lastClicked!=null){
+            unhideMarkers();
+            lastClicked = null;
+        }
+        else {
+            selectMarkerIfClicked(earthquakeMarkers);
+            selectMarkerIfClicked(cityMarkers);
+
+            if(lastClicked!=null) {
+                hidePart();
+            }
+        }
+    }
+
+    private void hidePart(){
+
+        if (lastClicked instanceof CityMarker) {
+
+            for (Marker marker : earthquakeMarkers) {
+                if (marker.getDistanceTo(lastClicked.getLocation()) > ((EarthquakeMarker) marker).threatCircle()) {
+                    marker.setHidden(true);
+                }
+            }
+            for (Marker marker : cityMarkers) {
+                if(marker!=lastClicked) marker.setHidden(true);
+            }
+        }
+        else if (lastClicked instanceof EarthquakeMarker){
+
+            for (Marker marker : cityMarkers) {
+                if (lastClicked.getDistanceTo(marker.getLocation()) > ((EarthquakeMarker) lastClicked).threatCircle()) {
+                    marker.setHidden(true);
+                }
+            }
+            for (Marker marker : earthquakeMarkers) {
+                if(marker!=lastClicked) marker.setHidden(true);
+            }
+        }
+
+    }
+
+    private void unhideMarkers() {
+        for(Marker marker : earthquakeMarkers) {
+            marker.setHidden(false);
+        }
+        for(Marker marker : cityMarkers) {
+            marker.setHidden(false);
+        }
     }
 
     private boolean isLand(PointFeature earthquake) {
@@ -124,7 +211,7 @@ public class createmap extends PApplet {
         textSize(15);
         text("Land Earthquake",80,275);
         text("Ocean EarthQuake",80,315);
-        text("City EarthQuake",80,355);
+        text("Cities",80,355);
 
         textSize(18);
         stroke(255,255,255);

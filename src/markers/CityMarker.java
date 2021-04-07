@@ -4,11 +4,12 @@ import de.fhpotsdam.unfolding.data.Feature;
 import de.fhpotsdam.unfolding.data.PointFeature;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.marker.SimplePointMarker;
+import processing.core.PConstants;
 import processing.core.PGraphics;
 
 import java.awt.*;
 
-public class CityMarker extends SimplePointMarker {
+public class CityMarker extends CommonMarker {
 
     public static final int TRI_SIZE = 7;
     private static final Color trcolor=new Color(194, 55, 0);
@@ -19,7 +20,7 @@ public class CityMarker extends SimplePointMarker {
         super(((PointFeature)city).getLocation(), city.getProperties());
     }
 
-    public void draw(PGraphics pg, float x, float y) {
+    public void drawMarker(PGraphics pg, float x, float y) {
 
         pg.pushStyle();
         PointFloat p1=new PointFloat(x,(y-(float)(TRI_SIZE*2/3)));
@@ -32,6 +33,18 @@ public class CityMarker extends SimplePointMarker {
         pg.triangle(p1.xCoord,p1.yCoord,p2.xCoord,p2.yCoord,p3.xCoord,p3.yCoord);
         pg.popStyle();
     }
+
+    public void showTitle(PGraphics pg,float x,float y){
+        if(selected){
+            String  display=getCity()+" "+getCountry()+" "+getPopulation();
+            pg.textSize(12);
+            pg.fill(125, 103, 103);
+            pg.rect(x,y-14,pg.textWidth(display),14);
+            pg.fill(255,255,255);
+            pg.text(display,x,y);
+        }
+    }
+
     public String getCity()
     {
         return getStringProperty("name");

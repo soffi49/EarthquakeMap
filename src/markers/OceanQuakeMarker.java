@@ -1,6 +1,7 @@
 package markers;
 
 import de.fhpotsdam.unfolding.data.PointFeature;
+import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import processing.core.PConstants;
 import processing.core.PGraphics;
 
