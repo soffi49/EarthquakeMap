@@ -43,7 +43,7 @@ public abstract class EarthquakeMarker extends CommonMarker implements Comparabl
         colorDetermine(pg);
         drawEarthquake(pg, x, y);
 
-        if(getProperty("age").equals("Past Hour")||getProperty("age").equals("Past Day")){
+        if(getProperty("age").equals("Past Hour")){
             pg.fill(255,255,255);
             pg.textSize(10);
             pg.text("X",x-5,y+5,4);

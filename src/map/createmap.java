@@ -1,6 +1,9 @@
 package map;
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
+import bullets.AgeBullet;
+import bullets.Bullet;
+import bullets.MagnitudeBullet;
+import bullets.TypeBullet;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.data.Feature;
 import de.fhpotsdam.unfolding.data.GeoJSONReader;
@@ -36,6 +39,8 @@ public class createmap extends PApplet {
 
     private CommonMarker lastSelected;
     private CommonMarker lastClicked;
+    private List<Bullet> bullets;
+    private Point menuClick;
 
 
     public void setup(){
@@ -67,6 +72,9 @@ public class createmap extends PApplet {
                 earthquakeMarkers.add(new OceanQuakeMarker(point));
             }
         }
+
+        bullets=new ArrayList<>();
+        menuClick=null;
         printQuakes();
         sortAndPrint(5);
         map.addMarkers(earthquakeMarkers);
@@ -132,11 +140,34 @@ public class createmap extends PApplet {
             lastClicked = null;
         }
         else {
+            menuWork();
             selectMarkerIfClicked(earthquakeMarkers);
             selectMarkerIfClicked(cityMarkers);
 
             if(lastClicked!=null) {
                 hidePart();
+            }
+        }
+    }
+
+    private void menuWork() {
+        Point mouse = new Point(mouseX, mouseY);
+
+        for (Bullet b : bullets) {
+            if (b.doesBelong(mouse)){
+                if(b.isactive){
+                    b.isactive=false;
+                }
+                else { b.isactive = true;}
+
+                    for (Marker m : earthquakeMarkers) {
+                        b.hideMarker(m);
+                    }
+                    if (b instanceof TypeBullet)
+                        for (Marker m : cityMarkers) {
+                            b.hideMarker(m);
+                        }
+                break;
             }
         }
     }
@@ -202,10 +233,13 @@ public class createmap extends PApplet {
 
         fill(128, 0, 0,200);
         ellipse(40,110,30,30);
+        bullets.add(new MagnitudeBullet(new Point(40,110),30,3));
         fill(255, 111, 0,200);
         ellipse(40,150,30,30);
+        bullets.add(new MagnitudeBullet(new Point(40,150),30,2));
         fill(1255, 187, 0,200);
         ellipse(40,190,30,30);
+        bullets.add(new MagnitudeBullet(new Point(40,190),30,1));
         fill(255,255,255);
         textSize(15);
         text("Magnitude >5",80,115);
@@ -218,8 +252,11 @@ public class createmap extends PApplet {
         fill(255, 255, 255,200);
         stroke(125, 103, 103);
         ellipse(40,270,30,30);
+        bullets.add(new TypeBullet(new Point(40,270),30, TypeBullet.type.circle));
         rect(25,295,30,30);
+        bullets.add((new TypeBullet(new Point(40,310),30, TypeBullet.type.square)));
         triangle(25,365,40,335,55,365);
+        bullets.add(new TypeBullet(new Point(40,350),30, TypeBullet.type.triangle));
         textSize(15);
         text("Land Earthquake",80,275);
         text("Ocean EarthQuake",80,315);
@@ -231,6 +268,7 @@ public class createmap extends PApplet {
         line(10,402,textWidth("Age   "),402);
         textSize(35);
         text("X",30,445);
+        bullets.add(new AgeBullet(new Point(45,430),35));
         textSize(15);
         text("Past hour Earthquake",80,435);
     }
